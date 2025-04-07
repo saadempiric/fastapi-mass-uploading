@@ -22,11 +22,15 @@ app = FastAPI()
 # Enable CORS for your Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # change to your site
+    allow_origins=[
+        "http://localhost:3000",
+        "https://empiric-website-v1-0.vercel.app",  # replace with your deployed frontend URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 def verify_admin_token(token: str):
     headers = {
