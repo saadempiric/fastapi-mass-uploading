@@ -51,7 +51,7 @@ class StrapiDocUploader:
     
     def extract_footer_text(self, doc):
         """
-        Extract text from document footer
+        Extract text from document footer, including all text elements
         
         Args:
             doc: Document object from python-docx
@@ -63,13 +63,26 @@ class StrapiDocUploader:
         try:
             # Loop through all sections to get their footers
             for section in doc.sections:
-                # Each section can have different footers - we'll check all of them
-                for footer_type in ['first_page_footer', 'footer']:
-                    footer = getattr(section, footer_type)
-                    if footer:
-                        for paragraph in footer.paragraphs:
-                            if paragraph.text.strip():
-                                footer_text += paragraph.text.strip() + " "
+                # Check all footer types
+                for footer_type in ['first_page_footer', 'footer', 'even_page_footer']:
+                    try:
+                        footer = getattr(section, footer_type)
+                        if footer:
+                            # Extract text from all paragraphs
+                            for paragraph in footer.paragraphs:
+                                if paragraph.text.strip():
+                                    footer_text += paragraph.text.strip() + " "
+                            
+                            # Extract text from tables if present
+                            for table in footer.tables:
+                                for row in table.rows:
+                                    for cell in row.cells:
+                                        for paragraph in cell.paragraphs:
+                                            if paragraph.text.strip():
+                                                footer_text += paragraph.text.strip() + " "
+                    except AttributeError:
+                        # Skip if this footer type doesn't exist
+                        continue
             
             footer_text = footer_text.strip()
             print(f"Extracted footer text: '{footer_text}'")
