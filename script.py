@@ -91,7 +91,7 @@ class StrapiDocUploader:
             print(f"Error extracting footer: {str(e)}")
             return ""
     
-    def parse_doc_file(self, file_path):
+    def parse_doc_file(self, file_path, original_filename=None):
         """
         Parse a DOCX file according to the required format
         
@@ -103,6 +103,8 @@ class StrapiDocUploader:
         """
         try:
             doc = Document(file_path)
+            filename_to_use = original_filename if original_filename else os.path.basename(file_path)
+            content_id = self.extract_content_id(filename_to_use)
             
             # Initialize variables
             blog_data = {
@@ -112,7 +114,8 @@ class StrapiDocUploader:
                 'content': '',
                 'modified_date': None,
                 'reading_time': 0,
-                'label': '' 
+                'label': '',
+                'content_id': content_id
             }
 
              # Get file's last modified date
@@ -247,6 +250,28 @@ class StrapiDocUploader:
             import traceback
             traceback.print_exc()
             return None
+        
+    def extract_content_id(self, filename):
+        """
+        Extract content ID from filename following the convention CONTENT-XXXX-...
+        
+        Args:
+            filename (str): Name of the file
+            
+        Returns:
+            str: The 4-digit content ID or None if not found
+        """
+        # Match pattern CONTENT-XXXX- where XXXX is any 4 digits
+        pattern = r"CONTENT-(\d{4})-"
+        match = re.search(pattern, filename)
+        
+        if match:
+            content_id = match.group(1)
+            print(f"Extracted content ID: {content_id} from filename: {filename}")
+            return content_id
+        else:
+            print(f"No content ID found in filename: {filename}")
+            return None
     
     def _process_inline_formatting(self, paragraph):
         """Process inline formatting (bold, italic, etc.) in a paragraph"""
@@ -286,7 +311,8 @@ class StrapiDocUploader:
                 "content": blog_data['content'],
                 "modified_date": blog_data['modified_date'],
                 "reading_time": blog_data['reading_time'],
-                "label": blog_data['label']
+                "label": blog_data['label'],
+                "content_id": blog_data['content_id']
             }
         }
         
@@ -335,6 +361,7 @@ class StrapiDocUploader:
                         'filename': filename,
                         'title': blog_data['title'],
                         'label': blog_data['label'],
+                        'content_id': blog_data['content_id'],
                         'success': result is not None,
                         'response': result
                     })
@@ -343,6 +370,7 @@ class StrapiDocUploader:
                         'filename': filename,
                         'title': 'Failed to parse',
                         'label': '',
+                        'content_id': None,
                         'success': False,
                         'response': None
                     })

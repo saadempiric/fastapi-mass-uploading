@@ -42,6 +42,7 @@ def verify_admin_token(token: str):
 @app.post("/upload")
 async def upload_docs(
     files: List[UploadFile],
+    original_filenames: List[str] = Form(...),
     api_url: str = Form(...),
     api_token: str = Form(...)
 ):
@@ -52,13 +53,17 @@ async def upload_docs(
     uploader = StrapiDocUploader(api_url)
 
     results = []
-    for file in files:
+    for i, file in enumerate(files):
+
+        if i < len(original_filenames):
+            original_filename = original_filenames[i]
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
             content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
 
-        blog_data = uploader.parse_doc_file(tmp_path)
+        blog_data = uploader.parse_doc_file(tmp_path, original_filename)
         if blog_data:
             result = uploader.upload_to_strapi(blog_data)
             results.append(result)
