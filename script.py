@@ -7,6 +7,7 @@ from docx import Document
 from bs4 import BeautifulSoup
 from html import escape
 from dotenv import load_dotenv
+import unicodedata
 
 load_dotenv()
 
@@ -115,7 +116,8 @@ class StrapiDocUploader:
                 'modified_date': None,
                 'reading_time': 0,
                 'label': '',
-                'content_id': content_id
+                'content_id': content_id,
+                'slug': ''
             }
 
              # Get file's last modified date
@@ -218,6 +220,9 @@ class StrapiDocUploader:
                         print(f"Using '{blog_data['title']}' as fallback title")
                         break
             
+            slug = self.slugify(blog_data['title'])
+            blog_data['slug'] = slug
+            
             # Structure HTML content
             html_content = '\n'.join(content_paragraphs)
             soup = BeautifulSoup(html_content, 'html.parser')
@@ -272,6 +277,19 @@ class StrapiDocUploader:
         else:
             print(f"No content ID found in filename: {filename}")
             return None
+        
+    def slugify(self, title: str) -> str:
+        # Normalize unicode characters
+        title = unicodedata.normalize('NFKD', title)
+        title = title.encode('ascii', 'ignore').decode('ascii')  # remove non-ascii
+
+        # Lowercase and remove non-alphanumeric characters except spaces
+        title = re.sub(r'[^\w\s-]', '', title.lower())
+
+        # Replace spaces and multiple hyphens with a single hyphen
+        title = re.sub(r'[-\s]+', '-', title).strip('-')
+
+        return title
     
     def _process_inline_formatting(self, paragraph):
         """Process inline formatting (bold, italic, etc.) in a paragraph"""
@@ -312,7 +330,8 @@ class StrapiDocUploader:
                 "modified_date": blog_data['modified_date'],
                 "reading_time": blog_data['reading_time'],
                 "label": blog_data['label'],
-                "content_id": blog_data['content_id']
+                "content_id": blog_data['content_id'],
+                "slug": blog_data['slug'],
             }
         }
         
