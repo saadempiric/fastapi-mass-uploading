@@ -259,21 +259,22 @@ class StrapiDocUploader:
     def extract_content_id(self, filename):
         """
         Extract content ID from filename following the convention CONTENT-XXXX-...
-        
+
         Args:
             filename (str): Name of the file
-            
+
         Returns:
-            str: The 4-digit content ID or None if not found
+            str: The full content ID in the format CONTENT-XXXX or None if not found
         """
         # Match pattern CONTENT-XXXX- where XXXX is any 4 digits
         pattern = r"CONTENT-(\d{4})-"
         match = re.search(pattern, filename)
-        
+
         if match:
             content_id = match.group(1)
-            print(f"Extracted content ID: {content_id} from filename: {filename}")
-            return content_id
+            full_id = f"CONTENT-{content_id}"
+            print(f"Extracted content ID: {full_id} from filename: {filename}")
+            return full_id
         else:
             print(f"No content ID found in filename: {filename}")
             return None
